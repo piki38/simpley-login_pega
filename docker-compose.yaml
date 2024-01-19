@@ -1,0 +1,65 @@
+version: '3'
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  prometheus_data: {}
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+    
+    networks:
+      monitoring:
+  db:
+    image: mysql
+    # volumes:
+    #   - db-data:/var/lib/mysql
+    container_name: db
+    environment:
+      - MYSQL_USER=
+      - MYSQL_PASSWORD=
+      - MYSQL_DATABASE=
+      - MYSQL_ROOT_PASSWORD=
+    restart: always
+    networks:
+      monitoring:
+  front-end:
+    build:
+      context: .
+      dockerfile: Dockerfile.front-end
+    container_name: Front
+    ports:
+  
+      depends_on:
+      - back-end
+    networks:
+      monitoring:
+  back-end:
+    container_name: server
+    build:
+      context: .
+      dockerfile: Dockerfile.back-end
+    environment:
+      -
+    restart: always
+    ports:
+      - 
+    depends_on:
+      - db
+    networks:
+      monitoring:
